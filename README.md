@@ -1,4 +1,4 @@
-# Heroku microservices with a unified gateway using Terraform
+# Heroku Enterprise microservices with a unified gateway using Terraform
 
 A Heroku [Private Space](https://devcenter.heroku.com/articles/private-spaces) provides a container for [internally routed apps](https://devcenter.heroku.com/articles/internal-routing) that are only accessible within its private network.
 
@@ -9,6 +9,8 @@ A single [Terraform config](https://www.terraform.io/docs/configuration/index.ht
 ![Diagram: Terraform a complete multi-app
 architecture with Heroku Private Spaces, 
 a Kong gateway, & DNSimple](doc/terraform-heroku-kong-microservices-v03.png)
+
+See also: [Heroku Common Runtime version of this architecture](https://github.com/mars/terraform-heroku-common-kong-microservices).
 
 ## Primary components
 
