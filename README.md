@@ -10,7 +10,7 @@ A single [Terraform config](https://www.terraform.io/docs/configuration/index.ht
 architecture with Heroku Private Spaces, 
 a Kong gateway, & DNSimple](doc/terraform-heroku-kong-microservices-v03.png)
 
-See also: [Heroku Common Runtime version of this architecture](https://github.com/mars/terraform-heroku-common-kong-microservices).
+▶ See also: **[Heroku Common Runtime version of this architecture](https://github.com/mars/terraform-heroku-common-kong-microservices)**
 
 ## Primary components
 
