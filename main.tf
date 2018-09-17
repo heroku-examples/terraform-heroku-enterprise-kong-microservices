@@ -16,12 +16,6 @@ variable "heroku_private_region" {
   default = "oregon"
 }
 
-variable "hello_world_header_message" {
-  type        = "string"
-  description = "Custom message to output in heroku-kong's 'Hello-World' HTTP header."
-  default     = "🌞💎"
-}
-
 locals {
   kong_app_name           = "${var.name}-proxy"
   kong_base_url           = "https://${local.kong_app_name}.${var.dns_zone}"
@@ -72,7 +66,6 @@ resource "heroku_app" "kong" {
 
   config_vars {
     KONG_HEROKU_ADMIN_KEY = "${random_id.kong_admin_api_key.b64_url}"
-    HELLO_WORLD_MESSAGE   = "${var.hello_world_header_message}"
   }
 
   organization = {
@@ -198,11 +191,6 @@ resource "dnsimple_record" "wasabi" {
   value  = "${heroku_domain.wasabi.cname}"
   type   = "CNAME"
   ttl    = 30
-}
-
-resource "kong_plugin" "wasabi_hello_world" {
-  name     = "hello-world-header"
-  service_id = "${kong_service.wasabi.id}"
 }
 
 output "wasabi_service_url" {
