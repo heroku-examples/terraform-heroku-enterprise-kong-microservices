@@ -29,11 +29,11 @@ provider "dnsimple" {
 }
 
 provider "heroku" {
-  version = "~> 1.4"
+  version = "~> 1.7"
 }
 
 provider "kong" {
-  version = "~> 1.7"
+  version = "~> 1.9"
 
   # Optional: use insecure until DNS is ready at dnsimple
   # kong_admin_uri = "${local.kong_insecure_admin_uri}"
@@ -76,9 +76,9 @@ resource "heroku_app" "kong" {
 }
 
 resource "heroku_domain" "kong" {
-  app        = "${heroku_app.kong.id}"
+  app        = "${heroku_app.kong.name}"
   hostname   = "${heroku_app.kong.name}.${var.dns_zone}"
-  depends_on = ["heroku_app_release.kong"]
+  depends_on = ["heroku_build.kong"]
 }
 
 resource "dnsimple_record" "kong" {
@@ -90,34 +90,30 @@ resource "dnsimple_record" "kong" {
 }
 
 resource "heroku_addon" "kong_pg" {
-  app  = "${heroku_app.kong.id}"
+  app  = "${heroku_app.kong.name}"
   plan = "heroku-postgresql:private-0"
 }
 
-resource "heroku_slug" "kong" {
-  app                            = "${heroku_app.kong.id}"
-  buildpack_provided_description = "Kong"
-  file_path                      = "slugs/kong.tgz"
+# The Kong Provider is not yet compatible with Kong 1.0 (buildpack & app v7.0),
+# so instead use 0.14 (buildpack & app v6.0).
+resource "heroku_build" "kong" {
+  app        = "${heroku_app.kong.name}"
+  buildpacks = ["https://github.com/heroku/heroku-buildpack-kong#v6.0.0"]
+  depends_on = ["heroku_addon.kong_pg"]
 
-  process_types = {
-    release = "bin/heroku-buildpack-kong-release"
-    web     = "bin/heroku-buildpack-kong-web"
+  source = {
+    # This app uses a community buildpack, set it in `buildpacks` above.
+    url     = "https://github.com/heroku/heroku-kong/archive/v6.0.1.tar.gz"
+    version = "v6.0.1"
   }
 }
 
-resource "heroku_app_release" "kong" {
-  app     = "${heroku_app.kong.id}"
-  slug_id = "${heroku_slug.kong.id}"
-
-  depends_on = ["heroku_addon.kong_pg"]
-}
-
 resource "heroku_formation" "kong" {
-  app        = "${heroku_app.kong.id}"
+  app        = "${heroku_app.kong.name}"
   type       = "web"
   quantity   = 1
   size       = "Private-S"
-  depends_on = ["heroku_app_release.kong", "dnsimple_record.kong"]
+  depends_on = ["heroku_build.kong", "dnsimple_record.kong"]
 
   provisioner "local-exec" {
     # Optional: use insecure until DNS is ready at dnsimple
@@ -140,27 +136,23 @@ resource "heroku_app" "wasabi" {
   region = "${var.heroku_private_region}"
 }
 
-resource "heroku_slug" "wasabi" {
-  app                            = "${heroku_app.wasabi.id}"
-  buildpack_provided_description = "Node.js"
-  file_path                      = "slugs/wasabi.tgz"
+resource "heroku_build" "wasabi" {
+  app        = "${heroku_app.wasabi.name}"
+  buildpacks = ["https://github.com/heroku/heroku-buildpack-nodejs"]
 
-  process_types = {
-    web = "npm start"
+  source = {
+    # This app uses a community buildpack, set it in `buildpacks` above.
+    url     = "https://github.com/mars/wasabi-internal/archive/v1.0.0.tar.gz"
+    version = "v1.0.0"
   }
 }
 
-resource "heroku_app_release" "wasabi" {
-  app     = "${heroku_app.wasabi.id}"
-  slug_id = "${heroku_slug.wasabi.id}"
-}
-
 resource "heroku_formation" "wasabi" {
-  app        = "${heroku_app.wasabi.id}"
+  app        = "${heroku_app.wasabi.name}"
   type       = "web"
   quantity   = 1
   size       = "Private-S"
-  depends_on = ["heroku_app_release.wasabi"]
+  depends_on = ["heroku_build.wasabi"]
 }
 
 resource "kong_service" "wasabi" {
@@ -180,9 +172,9 @@ resource "kong_route" "wasabi_hostname" {
 
 resource "heroku_domain" "wasabi" {
   # The internal app's public DNS name is created on the Kong proxy.
-  app        = "${heroku_app.kong.id}"
+  app        = "${heroku_app.kong.name}"
   hostname   = "${heroku_app.wasabi.name}.${var.dns_zone}"
-  depends_on = ["heroku_app_release.kong"]
+  depends_on = ["heroku_build.kong"]
 }
 
 resource "dnsimple_record" "wasabi" {
@@ -193,7 +185,11 @@ resource "dnsimple_record" "wasabi" {
   ttl    = 30
 }
 
-output "wasabi_service_url" {
+output "wasabi_backend_url" {
+  value = "https://${heroku_app.wasabi.name}.herokuapp.com"
+}
+
+output "wasabi_public_url" {
   # Optional: use insecure until DNS is ready at dnsimple
   # value = "${local.kong_insecure_base_url}/wasabi"
   value = "https://${heroku_app.wasabi.name}.${var.dns_zone}"

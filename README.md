@@ -7,7 +7,7 @@ Each microservice (internal app) is exposed to the internet through a Kong [serv
 A single [Terraform config](https://www.terraform.io/docs/configuration/index.html) embodies the complete system, enabling high-level collaboration, repeatability, test-ability, and change management.
 
 ![Diagram: Terraform a complete multi-app
-architecture with Heroku Private Spaces, 
+architecture with Heroku Private Spaces,
 a Kong gateway, & DNSimple](doc/terraform-heroku-kong-microservices-v03.png)
 
 ▶ See also: **[Heroku Common Runtime version of this architecture](https://github.com/heroku-examples/terraform-heroku-common-kong-microservices)**
@@ -47,7 +47,7 @@ Ensure the [requirements](#user-content-requirements) are met, then,
     git clone git@github.com:heroku-examples/terraform-heroku-kong-microservices.git
     cd terraform-heroku-kong-microservices/
     ```
-2. Install [terraform-provider-kong 1.7.0](https://github.com/kevholditch/terraform-provider-kong/releases/tag/v1.7.0)
+2. Install [terraform-provider-kong 1.9.1](https://github.com/kevholditch/terraform-provider-kong/releases/tag/v1.9.1)
     * download the `.zip` asset for your computer's architecture
     * unzip it into `terraform.d/plugins/$ARCH/`
     * where `$ARCH` is the computer's architecture, like `darwin_amd64`
@@ -66,6 +66,9 @@ Ensure the [requirements](#user-content-requirements) are met, then,
       -var dns_zone=example.com \
       -var heroku_enterprise_team=example-team
     ```
+7. Visit the output URLs in a web browser to demonstrate the secure backend & public gateway:
+    - ❌ `terraform output wasabi_backend_url` not directly accessible
+    - ✅ `terraform output wasabi_public_url`
 
 -----
 
